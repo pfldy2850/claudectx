@@ -22,11 +22,13 @@ builds:
       - -X github.com/pfldy2850/claudectx/internal/cli.Version={{.Version}}
 
 archives:
-  - format: tar.gz
+  - formats:
+      - tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
-        format: zip
+        formats:
+          - zip
 
 checksum:
   name_template: "checksums.txt"
@@ -44,17 +46,15 @@ changelog:
       - "^chore:"
       - "^style:"
 
-brews:
+homebrew_casks:
   - repository:
       owner: pfldy2850
       name: homebrew-tap
     homepage: https://github.com/pfldy2850/claudectx
     description: CLI tool to manage Claude Code configuration contexts
     license: MIT
-    install: |
-      bin.install "claudectx"
-    test: |
-      system "#{bin}/claudectx", "version"
+    binaries:
+      - claudectx
 
 release:
   github:
