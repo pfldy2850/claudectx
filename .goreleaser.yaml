@@ -50,6 +50,7 @@ homebrew_casks:
   - repository:
       owner: pfldy2850
       name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_TOKEN }}"
     homepage: https://github.com/pfldy2850/claudectx
     description: CLI tool to manage Claude Code configuration contexts
     license: MIT
