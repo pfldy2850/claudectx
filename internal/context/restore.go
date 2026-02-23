@@ -111,7 +111,7 @@ func AutoSaveCurrent(cfg *config.Config, targetSlug string) {
 func restoreCopy(contextDir string, scope *config.Scope, manifest *Manifest) (int, error) {
 	restored := 0
 	for _, entry := range manifest.Files {
-		srcPath := filepath.Join(contextDir, entry.RelPath)
+		srcPath := filepath.Join(contextDir, filepath.FromSlash(entry.RelPath))
 
 		var dstPath string
 		if isExtraFileSource(entry.Source) {
@@ -122,7 +122,7 @@ func restoreCopy(contextDir string, scope *config.Scope, manifest *Manifest) (in
 			dstPath = ef.Path
 		} else {
 			relToDotClaude := strings.TrimPrefix(entry.RelPath, "dotclaude/")
-			dstPath = filepath.Join(scope.DotClaudeDir, relToDotClaude)
+			dstPath = filepath.Join(scope.DotClaudeDir, filepath.FromSlash(relToDotClaude))
 		}
 
 		if err := fileutil.CopyFile(srcPath, dstPath); err != nil {

@@ -17,6 +17,8 @@ claudectx supports two scopes and auto-detects which to use:
 | **User** | `~/.claude/` + `~/.claude.json` | `~/.claudectx/` | Outside a project |
 | **Project** | `<root>/.claude/` + `CLAUDE.md` + `.mcp.json` | `<root>/.claudectx/` | Inside a project |
 
+> **Windows:** `~` refers to `%USERPROFILE%` (typically `C:\Users\<username>`). All paths work the same way.
+
 Project root is detected by (highest priority first):
 1. `--root` flag (explicit path)
 2. Claude marker files (`.claude/`, `CLAUDE.md`, `.claudectx/`)
@@ -25,10 +27,17 @@ Project root is detected by (highest priority first):
 
 ## Installation
 
-### Homebrew (macOS)
+### Homebrew (macOS / Linux)
 
 ```bash
 brew install pfldy2850/tap/claudectx
+```
+
+### Scoop (Windows)
+
+```powershell
+scoop bucket add pfldy2850 https://github.com/pfldy2850/scoop-bucket
+scoop install claudectx
 ```
 
 ### Download Binary
@@ -36,9 +45,18 @@ brew install pfldy2850/tap/claudectx
 Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/pfldy2850/claudectx/releases) page.
 
 ```bash
-# Example: macOS Apple Silicon
+# macOS (Apple Silicon)
 curl -sL https://github.com/pfldy2850/claudectx/releases/latest/download/claudectx_$(curl -s https://api.github.com/repos/pfldy2850/claudectx/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/^v//')_darwin_arm64.tar.gz | tar xz
 sudo mv claudectx /usr/local/bin/
+```
+
+```powershell
+# Windows (PowerShell)
+$version = (Invoke-RestMethod https://api.github.com/repos/pfldy2850/claudectx/releases/latest).tag_name -replace '^v',''
+Invoke-WebRequest -Uri "https://github.com/pfldy2850/claudectx/releases/latest/download/claudectx_${version}_windows_amd64.zip" -OutFile claudectx.zip
+Expand-Archive claudectx.zip -DestinationPath .
+Move-Item claudectx.exe "$env:LOCALAPPDATA\Microsoft\WindowsApps\"
+Remove-Item claudectx.zip
 ```
 
 ### Go Install
@@ -52,8 +70,9 @@ go install github.com/pfldy2850/claudectx/cmd/claudectx@latest
 ```bash
 git clone https://github.com/pfldy2850/claudectx.git
 cd claudectx
-make build
-# Binary is at ./bin/claudectx
+make build       # macOS / Linux
+# or
+go build -o claudectx.exe ./cmd/claudectx   # Windows
 ```
 
 ## Usage

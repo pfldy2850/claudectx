@@ -3,6 +3,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/pfldy2850/claudectx/internal/config"
 	"github.com/pfldy2850/claudectx/internal/context"
@@ -124,7 +125,7 @@ func interactiveSelect(cfg *config.Config) error {
 	// Load manifests for display
 	var items []ui.PickerItem
 	for _, name := range names {
-		m, err := context.ReadManifest(fmt.Sprintf("%s/%s", cfg.ContextsDir(), name))
+		m, err := context.ReadManifest(filepath.Join(cfg.ContextsDir(), name))
 		if err != nil {
 			continue
 		}
