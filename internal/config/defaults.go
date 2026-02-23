@@ -34,4 +34,4 @@ var DefaultExcludePatterns = []string{
 var DefaultProjectIncludePatterns = []string{"**"}
 
 // DefaultProjectExcludePatterns exclude OS junk from project-scope snapshots.
-var DefaultProjectExcludePatterns = []string{"**/.DS_Store"}
+var DefaultProjectExcludePatterns = []string{"**/.DS_Store", "**/Thumbs.db", "**/desktop.ini"}

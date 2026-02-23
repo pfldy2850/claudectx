@@ -11,6 +11,9 @@ import (
 	"github.com/pfldy2850/claudectx/internal/fileutil"
 )
 
+// toSlash normalizes a path to use forward slashes for portable manifest storage.
+func toSlash(p string) string { return filepath.ToSlash(p) }
+
 // SaveOptions configures the save operation.
 type SaveOptions struct {
 	Name        string
@@ -101,9 +104,9 @@ func Save(opts SaveOptions) (*SaveResult, error) {
 			if err := fileutil.CopyFile(w.AbsPath, dstPath); err != nil {
 				return nil, fmt.Errorf("copy %s: %w", w.RelPath, err)
 			}
-			checksum, _ := FileChecksum(w.AbsPath)
+				checksum, _ := FileChecksum(w.AbsPath)
 			files = append(files, FileEntry{
-				RelPath:  filepath.Join("dotclaude", w.RelPath),
+				RelPath:  toSlash(filepath.Join("dotclaude", w.RelPath)),
 				Size:     w.Info.Size(),
 				Mode:     uint32(w.Info.Mode()),
 				Checksum: checksum,
