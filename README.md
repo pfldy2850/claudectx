@@ -1,15 +1,34 @@
 # claudectx
 
-A CLI tool for managing Claude Code configuration contexts. Save, switch, and diff snapshots of your Claude Code config files as switchable profiles.
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A CLI tool for managing [Claude Code](https://code.claude.com/) configuration contexts. Create, switch, and list snapshots of your Claude Code config files as switchable profiles.
 
 Unlike tools that only manage OAuth/account profiles, **claudectx** manages your entire Claude Code configuration — settings, memory, plugin configs, and MCP server definitions — as switchable contexts.
 
-Supports two scopes:
+## Scopes
 
-- **User scope** — `~/.claude/` + `~/.claude.json` (default outside git repos)
-- **Project scope** — `<git-root>/.claude/` + `<git-root>/CLAUDE.md` (default inside git repos)
+claudectx supports two scopes and auto-detects which to use:
+
+| Scope | Source files | Storage | Default when |
+|-------|-------------|---------|-------------|
+| **User** | `~/.claude/` + `~/.claude.json` | `~/.claudectx/` | Outside a project |
+| **Project** | `<root>/.claude/` + `CLAUDE.md` + `.mcp.json` | `<root>/.claudectx/` | Inside a project |
+
+Project root is detected by (highest priority first):
+1. `--root` flag (explicit path)
+2. Claude marker files (`.claude/`, `CLAUDE.md`, `.claudectx/`)
+3. Git repository root (`.git/`)
+4. Current directory fallback (with `--scope project`)
 
 ## Installation
+
+### Go Install
+
+```bash
+go install github.com/pfldy2850/claudectx/cmd/claudectx@latest
+```
 
 ### From Source
 
@@ -20,20 +39,27 @@ make build
 # Binary is at ./bin/claudectx
 ```
 
-### Go Install
-
-```bash
-go install github.com/pfldy2850/claudectx/cmd/claudectx@latest
-```
-
 ## Usage
 
-### Save Current State
+### Create a Context
+
+Snapshot the current live files as a new context:
 
 ```bash
-claudectx save work
-claudectx save personal --description "Personal account settings"
-claudectx save full-backup --include-all  # Include all files (even debug, cache, etc.)
+claudectx create work
+claudectx create personal --description "Personal account settings"
+```
+
+Create an empty context (clean slate):
+
+```bash
+claudectx create blank --from-scratch
+```
+
+Copy from an existing context:
+
+```bash
+claudectx create work-v2 --copy-from work
 ```
 
 ### Switch Context
@@ -43,10 +69,12 @@ claudectx work       # Switch to 'work' context
 claudectx personal   # Switch to 'personal' context
 ```
 
+Edits to the current context are auto-saved before switching, so changes are never lost.
+
 ### Interactive Selection
 
 ```bash
-claudectx            # Opens TUI picker
+claudectx            # Opens TUI picker when no arguments given
 ```
 
 ### List Contexts
@@ -58,8 +86,10 @@ claudectx list
 # * work (5 files, 2.3 KB) - Work account
 #   personal (3 files, 1.1 KB) - Personal account
 
-claudectx list --json   # JSON output for scripting
+claudectx ls --json   # JSON output for scripting
 ```
+
+When inside a project without `--scope`, both project and user contexts are shown.
 
 ### Show Context Details
 
@@ -70,22 +100,15 @@ claudectx show work
 # Scope: user
 # OAuth Email: user@company.com
 # Created: 2025-01-15 10:30:00
+# Updated: 2025-01-20 14:22:00
 # Files: 5
 # Total Size: 2.3 KB
+# Checksum: a1b2c3d4e5f6...
 #
 # Files:
 #   claude.json (1.2 KB) [claudejson]
 #   dotclaude/settings.json (256 B) [dotclaude]
 #   ...
-```
-
-### Diff Against Saved Context
-
-```bash
-claudectx diff work
-#   M settings.json (256 B → 312 B)
-#   + plugins/blocklist.json (48 B)
-#   - projects/old/memory/MEMORY.md (128 B)
 ```
 
 ### Show Active Context
@@ -99,23 +122,24 @@ claudectx current
 
 ```bash
 claudectx delete old-context
-claudectx delete old-context --force   # Skip confirmation
+claudectx rm old-context --force   # Skip confirmation
 ```
+
+The active context cannot be deleted — switch to another context first.
 
 ### Scope Override
 
-By default, claudectx auto-detects scope based on whether you're inside a git repo. Use `--scope` to override:
-
 ```bash
-claudectx save my-settings --scope user      # Force user scope
-claudectx list --scope project               # Force project scope
+claudectx create my-settings --scope user      # Force user scope
+claudectx list --scope project                  # Force project scope
+claudectx work --root /path/to/project          # Explicit project root
 ```
 
 ## What Gets Saved
 
-### User Scope
+### User Scope (`~/.claude/`)
 
-Saves configuration and memory files while excluding large temporary data:
+Snapshots configuration and memory files while excluding large ephemeral data:
 
 **Included:**
 - `~/.claude.json` — Core settings (OAuth, MCP servers, feature flags)
@@ -124,94 +148,78 @@ Saves configuration and memory files while excluding large temporary data:
 - `projects/*/memory/**` — Project memory files
 
 **Excluded:**
-- `debug/`, `cache/`, `plugins/cache/` — Temporary/cached data
+- `debug/**`, `cache/**`, `plugins/cache/**` — Temporary/cached data
 - `projects/*/*.jsonl` — Session logs
-- `file-history/`, `todos/`, `tasks/`, `shell-snapshots/` — Ephemeral state
-- `statsig/`, `telemetry/`, `usage-data/` — Analytics
+- `file-history/**`, `todos/**`, `tasks/**`, `plans/**` — Ephemeral state
+- `shell-snapshots/**`, `session-env/**`, `ide/**` — Runtime data
+- `statsig/**`, `telemetry/**`, `usage-data/**` — Analytics
+- `paste-cache/**`, `history.jsonl`, `backups/**`
 
-### Project Scope
+### Project Scope (`<root>/.claude/`)
 
-Saves all project-level Claude config:
+Snapshots all project-level Claude config:
 
 **Included:**
-- `<git-root>/CLAUDE.md` — Project instructions
-- `<git-root>/.claude/**` — All files in the project's `.claude/` directory
+- `<root>/CLAUDE.md` — Project instructions
+- `<root>/.mcp.json` — MCP server configuration
+- `<root>/.claude/**` — All files in the project's `.claude/` directory
 
 **Excluded:**
 - `.DS_Store` files
-
-Use `--include-all` to override excludes and snapshot everything.
 
 ## Global Flags
 
 | Flag | Description |
 |------|-------------|
 | `--scope <user\|project>` | Override auto-detected scope |
+| `--root <path>` | Explicit project root directory (implies project scope) |
 | `--verbose`, `-v` | Verbose output |
 | `--dry-run` | Show what would happen without making changes |
 | `--force`, `-f` | Skip confirmations |
 | `--config <path>` | Custom config file path |
 
-## Storage
-
-### User Scope
-
-Stored in `~/.claudectx/`:
+## Storage Layout
 
 ```
-~/.claudectx/
-├── config.json        # User configuration
-├── current            # Active context name
-├── contexts/          # Saved context snapshots
+<storage-dir>/
+├── config.json          # Configuration
+├── current              # Active context name
+├── contexts/            # Saved context snapshots
 │   ├── work/
 │   │   ├── manifest.json
-│   │   ├── claude.json
-│   │   └── dotclaude/
+│   │   ├── claude.json        # (user scope) or CLAUDE.md (project scope)
+│   │   └── dotclaude/         # .claude/ directory snapshot
+│   │       ├── settings.json
+│   │       └── ...
 │   └── personal/
-└── backups/           # Pre-switch backups
+└── backups/             # Pre-switch backups
 ```
 
-### Project Scope
-
-Stored in `<git-root>/.claudectx/`:
-
-```
-<git-root>/.claudectx/
-├── config.json        # Project configuration
-├── current            # Active context name
-├── contexts/          # Saved context snapshots
-│   ├── experiment-a/
-│   │   ├── manifest.json
-│   │   ├── CLAUDE.md
-│   │   └── dotclaude/
-│   └── experiment-b/
-└── backups/           # Pre-switch backups
-```
-
-> **Note:** Add `.claudectx/` to your `.gitignore` when using project scope.
+> **Note:** `.claudectx/` is automatically added to `.gitignore` when using project scope.
 
 ## Architecture
 
 ```
 cmd/claudectx/         Entry point
 internal/
-├── cli/               Cobra CLI commands (--scope flag, gitignore warning)
-├── context/           Core operations (save, restore, diff, manifest)
+├── cli/               Cobra commands & global flags
+├── context/           Core operations (save, restore, manifest)
 ├── fileutil/          File copy, glob filtering, directory walking
-├── config/            Configuration, scope resolution, and defaults
-├── claude/            Claude Code path resolution and git root detection
-└── ui/                Interactive TUI (bubbletea) and formatted output
+├── config/            Configuration, scope resolution, defaults
+├── claude/            Claude Code path resolution, project root detection
+└── ui/                Interactive TUI (Bubbletea) and formatted output
 ```
 
 ## Development
 
 ```bash
-make build       # Build binary
-make test        # Run tests
-make test-cover  # Run tests with coverage
+make build       # Build binary (injects git version via ldflags)
+make test        # Run all tests
+make test-cover  # Run tests with coverage report
+make lint        # Lint with golangci-lint
 make clean       # Clean build artifacts
 ```
 
 ## License
 
-MIT
+[MIT](LICENSE)
