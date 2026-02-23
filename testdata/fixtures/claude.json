@@ -1,0 +1,12 @@
+{
+  "oauthEmail": "test@example.com",
+  "mcpServers": {
+    "example-server": {
+      "command": "npx",
+      "args": ["example-mcp-server"]
+    }
+  },
+  "featureFlags": {
+    "darkMode": true
+  }
+}
