@@ -1,0 +1,65 @@
+version: 2
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - main: ./cmd/claudectx
+    binary: claudectx
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/pfldy2850/claudectx/internal/cli.Version={{.Version}}
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: "checksums.txt"
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+      - "^style:"
+
+homebrew_casks:
+  - repository:
+      owner: pfldy2850
+      name: homebrew-tap
+    homepage: https://github.com/pfldy2850/claudectx
+    description: CLI tool to manage Claude Code configuration contexts
+    license: MIT
+    binaries:
+      - claudectx
+
+release:
+  github:
+    owner: pfldy2850
+    name: claudectx
+  draft: false
+  prerelease: auto
+  name_template: "v{{.Version}}"
