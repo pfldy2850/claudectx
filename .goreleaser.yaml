@@ -56,6 +56,12 @@ homebrew_casks:
     license: MIT
     binaries:
       - claudectx
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/claudectx"]
+          end
 
 release:
   github:

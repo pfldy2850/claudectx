@@ -2,6 +2,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white)](https://go.dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Release](https://img.shields.io/github/v/release/pfldy2850/claudectx)](https://github.com/pfldy2850/claudectx/releases/latest)
 
 A CLI tool for managing [Claude Code](https://code.claude.com/) configuration contexts. Create, switch, and list snapshots of your Claude Code config files as switchable profiles.
 
@@ -23,6 +24,22 @@ Project root is detected by (highest priority first):
 4. Current directory fallback (with `--scope project`)
 
 ## Installation
+
+### Homebrew (macOS)
+
+```bash
+brew install pfldy2850/tap/claudectx
+```
+
+### Download Binary
+
+Pre-built binaries for Linux, macOS, and Windows are available on the [Releases](https://github.com/pfldy2850/claudectx/releases) page.
+
+```bash
+# Example: macOS Apple Silicon
+curl -sL https://github.com/pfldy2850/claudectx/releases/latest/download/claudectx_$(curl -s https://api.github.com/repos/pfldy2850/claudectx/releases/latest | grep tag_name | cut -d'"' -f4 | sed 's/^v//')_darwin_arm64.tar.gz | tar xz
+sudo mv claudectx /usr/local/bin/
+```
 
 ### Go Install
 
